@@ -78,13 +78,6 @@ export interface CollapsibleProps {
   easing?: EasingMode | any;
 
   /**
-   * Render children in collapsible even if not visible
-   *
-   * @default true
-   */
-  renderChildrenCollapsed?: boolean;
-
-  /**
    * Optional styling for the container
    */
   style?: StyleProp<ViewStyle>;
@@ -93,8 +86,6 @@ export interface CollapsibleProps {
    * Function called when the animation finished
    */
   onAnimationEnd?: () => void;
-
-  children: React.ReactNode;
 }
 
 export default class Collapsible extends React.Component<CollapsibleProps> {}

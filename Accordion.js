@@ -1,31 +1,44 @@
 import React, { Component } from 'react';
-import { View, TouchableHighlight, FlatList } from 'react-native';
+import PropTypes from 'prop-types';
+import { View, TouchableHighlight } from 'react-native';
 import Collapsible from './Collapsible';
+import { ViewPropTypes } from './config';
 
-const COLLAPSIBLE_PROPS = [
-  'align',
-  'collapsed',
-  'collapsedHeight',
-  'renderChildrenCollapsed',
-  'enablePointerEvents',
-  'duration',
-  'easing',
-  'style',
-  'onAnimationEnd',
-];
+const COLLAPSIBLE_PROPS = Object.keys(Collapsible.propTypes);
+const VIEW_PROPS = Object.keys(ViewPropTypes);
 
 export default class Accordion extends Component {
+  static propTypes = {
+    sections: PropTypes.array.isRequired,
+    renderHeader: PropTypes.func.isRequired,
+    renderContent: PropTypes.func.isRequired,
+    renderFooter: PropTypes.func,
+    renderSectionTitle: PropTypes.func,
+    activeSections: PropTypes.arrayOf(PropTypes.number).isRequired,
+    onChange: PropTypes.func.isRequired,
+    align: PropTypes.oneOf(['top', 'center', 'bottom']),
+    duration: PropTypes.number,
+    easing: PropTypes.string,
+    underlayColor: PropTypes.string,
+    touchableComponent: PropTypes.elementType,
+    touchableProps: PropTypes.object,
+    disabled: PropTypes.bool,
+    expandFromBottom: PropTypes.bool,
+    expandMultiple: PropTypes.bool,
+    onAnimationEnd: PropTypes.func,
+    sectionContainerStyle: ViewPropTypes.style,
+    containerStyle: ViewPropTypes.style,
+  };
+
   static defaultProps = {
     underlayColor: 'black',
     disabled: false,
     expandFromBottom: false,
     expandMultiple: false,
     touchableComponent: TouchableHighlight,
-    keyExtractor: (item, index) => index,
     renderSectionTitle: () => null,
     onAnimationEnd: () => null,
     sectionContainerStyle: {},
-    renderAsFlatList: false,
   };
 
   _toggleSection(section) {
@@ -35,62 +48,31 @@ export default class Accordion extends Component {
       let updatedSections = [];
 
       if (activeSections.includes(section)) {
-        updatedSections = activeSections.filter((a) => a !== section);
+        updatedSections = activeSections.filter(a => a !== section);
       } else if (expandMultiple) {
         updatedSections = [...activeSections, section];
       } else {
         updatedSections = [section];
       }
 
-      if (onChange) {
-        onChange(updatedSections);
-      }
+      onChange && onChange(updatedSections);
     }
   }
 
-  _renderContainer = (section, key, renderCollapsible) => {
-    const {
-      activeSections,
-      sectionContainerStyle,
-      expandFromBottom,
-      sections,
-      underlayColor,
-      touchableProps,
-      touchableComponent: Touchable,
-      renderHeader,
-      renderFooter,
-      renderSectionTitle,
-    } = this.props;
-    return (
-      <View key={key} style={sectionContainerStyle}>
-        {renderSectionTitle(section, key, activeSections.includes(key))}
-
-        {expandFromBottom && renderCollapsible(section, key)}
-
-        <Touchable
-          onPress={() => this._toggleSection(key)}
-          underlayColor={underlayColor}
-          {...touchableProps}
-          accessibilityState={{
-            expanded: activeSections.includes(key),
-          }}
-        >
-          {renderHeader(section, key, activeSections.includes(key), sections)}
-        </Touchable>
-
-        {!expandFromBottom && renderCollapsible(section, key)}
-
-        {renderFooter &&
-          renderFooter(section, key, activeSections.includes(key), sections)}
-      </View>
-    );
-  };
-
   render() {
+    let viewProps = {};
+    let collapsibleProps = {};
+
+    Object.keys(this.props).forEach(key => {
+      if (COLLAPSIBLE_PROPS.includes(key)) {
+        collapsibleProps[key] = this.props[key];
+      } else if (VIEW_PROPS.includes(key)) {
+        viewProps[key] = this.props[key];
+      }
+    });
+
     const {
       activeSections,
-      expandMultiple,
-      onChange,
       containerStyle,
       sectionContainerStyle,
       expandFromBottom,
@@ -103,22 +85,7 @@ export default class Accordion extends Component {
       renderHeader,
       renderFooter,
       renderSectionTitle,
-      disabled,
-      renderAsFlatList,
-      keyExtractor,
-      ...restProps
     } = this.props;
-
-    const viewProps = {};
-    const collapsibleProps = {};
-
-    Object.keys(restProps).forEach((key) => {
-      if (COLLAPSIBLE_PROPS.includes(key)) {
-        collapsibleProps[key] = restProps[key];
-      } else {
-        viewProps[key] = restProps[key];
-      }
-    });
 
     const renderCollapsible = (section, key) => (
       <Collapsible
@@ -130,30 +97,38 @@ export default class Accordion extends Component {
       </Collapsible>
     );
 
-    if (renderAsFlatList) {
-      return (
-        <FlatList
-          style={containerStyle}
-          data={sections}
-          extraData={activeSections}
-          nestedScrollEnabled={true}
-          keyExtractor={keyExtractor}
-          renderItem={({ item, index }) => {
-            const section = item;
-            const key = keyExtractor(item, index);
-            return this._renderContainer(section, key, renderCollapsible);
-          }}
-          {...viewProps}
-        />
-      );
-    }
-
     return (
       <View style={containerStyle} {...viewProps}>
-        {sections.map((section, index) => {
-          const key = keyExtractor(section, index);
-          return this._renderContainer(section, key, renderCollapsible);
-        })}
+        {sections.map((section, key) => (
+          <View key={key} style={sectionContainerStyle}>
+            {renderSectionTitle(section, key, activeSections.includes(key))}
+
+            {expandFromBottom && renderCollapsible(section, key)}
+
+            <Touchable
+              onPress={() => this._toggleSection(key)}
+              underlayColor={underlayColor}
+              {...touchableProps}
+            >
+              {renderHeader(
+                section,
+                key,
+                activeSections.includes(key),
+                sections
+              )}
+            </Touchable>
+
+            {!expandFromBottom && renderCollapsible(section, key)}
+
+            {renderFooter &&
+              renderFooter(
+                section,
+                key,
+                activeSections.includes(key),
+                sections
+              )}
+          </View>
+        ))}
       </View>
     );
   }

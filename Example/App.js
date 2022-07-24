@@ -63,7 +63,7 @@ export default class App extends Component {
     this.setState({ collapsed: !this.state.collapsed });
   };
 
-  setSections = (sections) => {
+  setSections = sections => {
     this.setState({
       activeSections: sections.includes(undefined) ? [] : sections,
     });
@@ -88,7 +88,9 @@ export default class App extends Component {
         style={[styles.content, isActive ? styles.active : styles.inactive]}
         transition="backgroundColor"
       >
-        <Text>{section.content}</Text>
+        <Animatable.Text animation={isActive ? 'bounceIn' : undefined}>
+          {section.content}
+        </Animatable.Text>
       </Animatable.View>
     );
   }
@@ -105,14 +107,14 @@ export default class App extends Component {
             <Text style={styles.multipleToggle__title}>Multiple Select?</Text>
             <Switch
               value={multipleSelect}
-              onValueChange={(a) => this.setState({ multipleSelect: a })}
+              onValueChange={a => this.setState({ multipleSelect: a })}
             />
           </View>
 
           <View style={styles.selectors}>
             <Text style={styles.selectTitle}>Select:</Text>
 
-            {SELECTORS.map((selector) => (
+            {SELECTORS.map(selector => (
               <TouchableOpacity
                 key={selector.title}
                 onPress={() => this.setSections([selector.value])}
@@ -136,20 +138,15 @@ export default class App extends Component {
               <Text style={styles.headerText}>Single Collapsible</Text>
             </View>
           </TouchableOpacity>
-          <Collapsible collapsed={this.state.collapsed}>
+          <Collapsible collapsed={this.state.collapsed} align="center">
             <View style={styles.content}>
-              <Animatable.Text
-                animation={this.state.collapsed ? undefined : 'zoomIn'}
-                duration={300}
-                useNativeDriver
-              >
+              <Text>
                 Bacon ipsum dolor amet chuck turducken landjaeger tongue spare
                 ribs
-              </Animatable.Text>
+              </Text>
             </View>
           </Collapsible>
           <Accordion
-            align="bottom"
             activeSections={activeSections}
             sections={CONTENT}
             touchableComponent={TouchableOpacity}
@@ -158,7 +155,6 @@ export default class App extends Component {
             renderContent={this.renderContent}
             duration={400}
             onChange={this.setSections}
-            renderAsFlatList={false}
           />
         </ScrollView>
       </View>
